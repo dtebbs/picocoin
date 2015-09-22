@@ -25,8 +25,9 @@ static void serialize_msg_and_check(const char *command,
     if (0 != memcmp(msg->str, expected_data, expected_size)) {
         const uint8_t *msg_data = (const uint8_t *)msg->str;
         const uint8_t *expect = (const uint8_t *)expected_data;
+        int i;
 
-        for (int i = 0 ; i < expected_size ; ++i) {
+        for (i = 0 ; i < expected_size ; ++i) {
             fprintf(stderr, "%03d: expected: %02x saw: %02x",
                     i, expect[i], msg_data[i]);
             if (msg_data[i] != expect[i]) {
