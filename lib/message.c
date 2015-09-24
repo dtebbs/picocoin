@@ -265,6 +265,8 @@ bool deser_msg_version(struct msg_version *mv, struct const_buffer *buf)
 	}
 	if (mv->nVersion >= 70001) {
 		if (!deser_bool(&mv->bRelay, buf)) return false;
+	} else {
+		mv->bRelay = true;
 	}
 
 	return true;

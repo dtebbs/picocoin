@@ -118,6 +118,10 @@ static void test_version()
             mv.nStartingHeight = 212672;
 
             serialize_version_and_check(&mv, expected, sizeof(expected));
+
+            mv.bRelay = false; /* should have no effect here */
+            serialize_version_and_check(&mv, expected, sizeof(expected));
+
             msg_version_free(&mv);
         }
 
@@ -125,6 +129,8 @@ static void test_version()
         {
             struct msg_version mv;
             msg_version_init(&mv);
+
+            assert(mv.bRelay); /* should be true by default */
 
             struct const_buffer buf = { expected, sizeof(expected) };
             assert(deser_msg_version(&mv, &buf));
@@ -139,6 +145,7 @@ static void test_version()
             assert(0x6517e68c5db32e3b == mv.nonce);
             assert(0 == strcmp(mv.strSubVer, "/Satoshi:0.7.2/"));
             assert(212672 == mv.nStartingHeight);
+            assert(mv.bRelay);
 
             msg_version_free(&mv);
         }
@@ -370,7 +377,7 @@ static void test_getheaders()
 int main(int argc, char **argv)
 {
     test_version();
-    test_getheaders();
+	test_getheaders();
 
     return 0;
 }
