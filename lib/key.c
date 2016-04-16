@@ -63,7 +63,6 @@ bool bp_key_generate(struct bp_key *key)
 
 	// Keep trying until public key generation passes (random
 	// secret is valid).
-
 	do {
 		if (!RAND_bytes(key->secret, (int )sizeof(key->secret))) {
 			return false;
