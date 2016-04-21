@@ -24,10 +24,11 @@ libccoin_la_SOURCES=	\
 	coredefs.c	\
 	cstr.c		\
 	dns.c		\
-	hdkeys.c	\
-	hexcode.c	\
 	file_seq.c	\
 	hashtab.c	\
+	hdkeys.c	\
+	hexcode.c	\
+	hmac.c		\
 	key.c		\
 	keyset.c	\
 	keystore.c	\
@@ -41,6 +42,8 @@ libccoin_la_SOURCES=	\
 	script_names.c	\
 	script_sign.c	\
 	serialize.c	\
+	sha1.c		\
+	sha2.c		\
 	util.c		\
 	utxo.c		\
 	wallet.c

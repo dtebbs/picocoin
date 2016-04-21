@@ -19,6 +19,7 @@ ccoininclude_HEADERS = \
 	hashtab.h	\
 	hdkeys.h	\
 	hexcode.h	\
+	hmac.h		\
 	key.h		\
 	mbr.h		\
 	message.h	\
@@ -26,6 +27,7 @@ ccoininclude_HEADERS = \
 	parr.h		\
 	script.h	\
 	serialize.h	\
+	sha1.h		\
+	sha2.h		\
 	util.h		\
 	wallet.h
-
