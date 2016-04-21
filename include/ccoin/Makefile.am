@@ -25,6 +25,7 @@ ccoininclude_HEADERS = \
 	message.h	\
 	net.h		\
 	parr.h		\
+	ripemd160.h	\
 	script.h	\
 	serialize.h	\
 	sha1.h		\

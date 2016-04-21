@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include <openssl/ripemd.h>
+#include <ccoin/ripemd160.h>
 #include <ccoin/script.h>
 #include <ccoin/util.h>
 #include <ccoin/key.h>

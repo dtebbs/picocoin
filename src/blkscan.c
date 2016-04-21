@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <argp.h>
-#include <openssl/ripemd.h>
+#include <ccoin/ripemd160.h>
 #include <ccoin/coredefs.h>
 #include <ccoin/base58.h>
 #include <ccoin/buffer.h>
@@ -461,5 +461,3 @@ int main (int argc, char *argv[])
 
 	return 0;
 }
-
-

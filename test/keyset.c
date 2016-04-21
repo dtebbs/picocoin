@@ -6,8 +6,8 @@
 
 #include <string.h>
 #include <assert.h>
-#include <openssl/ripemd.h>
-#include <openssl/sha.h>
+#include <ccoin/ripemd160.h>
+#include <ccoin/sha2.h>
 #include <ccoin/key.h>
 #include <ccoin/util.h>
 #include "libtest.h"
@@ -44,7 +44,7 @@ static void keytest()
 		const uint8_t test_secret[32] = { 0x1 };
 		const uint8_t test_data[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
 		bu256_t hash;
-		SHA256(test_data, sizeof(test_data), (uint8_t *)&hash);
+		sha256_Raw(test_data, sizeof(test_data), (uint8_t *)&hash);
 
 		void *pub = NULL;
 		size_t publen = 0;

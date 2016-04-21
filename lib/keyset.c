@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <openssl/ripemd.h>
+#include <ccoin/ripemd160.h>
 #include <ccoin/key.h>
 #include <ccoin/buffer.h>
 #include <ccoin/util.h>
@@ -63,4 +63,3 @@ void bpks_free(struct bp_keyset *ks)
 	bp_hashtab_unref(ks->pub);
 	bp_hashtab_unref(ks->pubhash);
 }
-

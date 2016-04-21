@@ -37,6 +37,7 @@ libccoin_la_SOURCES=	\
 	message.c	\
 	net.c		\
 	parr.c		\
+	ripemd160.c	\
 	script.c	\
 	script_eval.c	\
 	script_names.c	\

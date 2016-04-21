@@ -9,8 +9,7 @@
 #include <ccoin/serialize.h>
 #include <ccoin/util.h>
 #include <ccoin/hmac.h>
-
-#include <openssl/ripemd.h>
+#include <ccoin/ripemd160.h>
 
 #define MAIN_PUBLIC 0x0488B21E
 #define MAIN_PRIVATE 0x0488ADE4
