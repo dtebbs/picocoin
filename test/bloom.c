@@ -6,7 +6,7 @@
 
 #include <string.h>
 #include <assert.h>
-#include <ccoin/sha2.h>
+#include <ccoin/crypto/sha2.h>
 #include <ccoin/bloom.h>
 #include "libtest.h"
 

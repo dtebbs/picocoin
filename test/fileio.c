@@ -7,7 +7,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include <ccoin/sha1.h>
+#include <ccoin/crypto/sha1.h>
 #include <ccoin/util.h>
 #include <ccoin/hexcode.h>
 

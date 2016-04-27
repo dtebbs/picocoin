@@ -1,7 +1,11 @@
 
 ccoinincludedir=$(includedir)/ccoin
 
-ccoininclude_HEADERS = \
+ccoininclude_HEADERS =	\
+	crypto/hmac.h	\
+	crypto/ripemd160.h	\
+	crypto/sha1.h	\
+	crypto/sha2.h	\
 	address.h	\
 	addr_match.h	\
 	base58.h	\
@@ -19,16 +23,12 @@ ccoininclude_HEADERS = \
 	hashtab.h	\
 	hdkeys.h	\
 	hexcode.h	\
-	hmac.h		\
 	key.h		\
 	mbr.h		\
 	message.h	\
 	net.h		\
 	parr.h		\
-	ripemd160.h	\
 	script.h	\
 	serialize.h	\
-	sha1.h		\
-	sha2.h		\
 	util.h		\
 	wallet.h

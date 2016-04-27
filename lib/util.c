@@ -13,8 +13,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include <ccoin/ripemd160.h>
-#include <ccoin/sha2.h>
+#include <ccoin/crypto/ripemd160.h>
+#include <ccoin/crypto/sha2.h>
 #include <ccoin/coredefs.h>
 #include <ccoin/util.h>
 #include <ccoin/compat.h>		/* for mkstemp */
@@ -234,4 +234,3 @@ bool czstr_equal(const void *a, const void *b)
 
 	return (memcmp(a, b, a_len) == 0);
 }
-

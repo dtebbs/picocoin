@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <ccoin/ripemd160.h>
+#include <ccoin/crypto/ripemd160.h>
 #include <ccoin/key.h>
 #include <ccoin/buffer.h>
 #include <ccoin/util.h>

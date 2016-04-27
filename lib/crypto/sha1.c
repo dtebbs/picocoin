@@ -5,7 +5,7 @@
  */
 
 #include <ccoin/endian.h>
-#include <ccoin/sha1.h>
+#include <ccoin/crypto/sha1.h>
 
 #include <string.h>
 

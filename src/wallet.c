@@ -11,7 +11,7 @@
 #include <ccoin/coredefs.h>
 
 
-#include <ccoin/ripemd160.h>
+#include <ccoin/crypto/ripemd160.h>
 #include "picocoin.h"
 #include "wallet.h"
 #include <ccoin/message.h>
@@ -316,4 +316,3 @@ void cur_wallet_dump(void)
 
 	printf("\n");
 }
-

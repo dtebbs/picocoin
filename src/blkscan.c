@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <argp.h>
-#include <ccoin/ripemd160.h>
+#include <ccoin/crypto/ripemd160.h>
 #include <ccoin/coredefs.h>
 #include <ccoin/base58.h>
 #include <ccoin/buffer.h>

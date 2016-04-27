@@ -6,8 +6,8 @@
 
 #include <string.h>
 #include <assert.h>
-#include <ccoin/ripemd160.h>
-#include <ccoin/sha2.h>
+#include <ccoin/crypto/ripemd160.h>
+#include <ccoin/crypto/sha2.h>
 #include <ccoin/key.h>
 #include <ccoin/util.h>
 #include "libtest.h"

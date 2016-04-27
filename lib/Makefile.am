@@ -8,6 +8,10 @@ libccoin_la_LIBADD= -lm \
                     $(top_builddir)/external/secp256k1/libsecp256k1.la
 
 libccoin_la_SOURCES=	\
+	crypto/hmac.c	\
+	crypto/ripemd160.c	\
+	crypto/sha1.c	\
+	crypto/sha2.c	\
 	address.c	\
 	addr_match.c	\
 	base58.c	\
@@ -28,7 +32,6 @@ libccoin_la_SOURCES=	\
 	hashtab.c	\
 	hdkeys.c	\
 	hexcode.c	\
-	hmac.c		\
 	key.c		\
 	keyset.c	\
 	keystore.c	\
@@ -37,14 +40,11 @@ libccoin_la_SOURCES=	\
 	message.c	\
 	net.c		\
 	parr.c		\
-	ripemd160.c	\
 	script.c	\
 	script_eval.c	\
 	script_names.c	\
 	script_sign.c	\
 	serialize.c	\
-	sha1.c		\
-	sha2.c		\
 	util.c		\
 	utxo.c		\
 	wallet.c
