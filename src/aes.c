@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <openssl/evp.h>
 #include <openssl/aes.h>
+/* #include <ccoin/crypto/aes.h> */
+/* #include <ccoin/crypto/sha2.h> */
 #include <ccoin/util.h>
 #include <ccoin/cstr.h>
 
@@ -20,9 +22,70 @@
  * Create an 256 bit key and IV using the supplied key_data. salt can be added for taste.
  * Fills in the encryption and decryption ctx objects and returns 0 on success
  **/
-static bool aes_init(unsigned char *key_data, int key_data_len,
-	     unsigned char *salt, EVP_CIPHER_CTX * e_ctx,
-	     EVP_CIPHER_CTX * d_ctx)
+
+#if 0
+static bool aes_init_new(unsigned char *key_data,
+			 int key_data_len,
+			 unsigned char *salt_8,
+			 uint8_t *iv_32,
+			 aes_encrypt_ctx *e_ctx,
+			 aes_decrypt_ctx *d_ctx)
+{
+	int nrounds = 1721;
+
+	/*
+	 * Gen key & IV for AES 256 CBC mode. A SHA1 digest is used to
+	 * hash the supplied key material.  nrounds is the number of
+	 * times the we hash the material. More rounds are more secure
+	 * but slower.
+	 */
+
+	/*
+	 * hash^nrounds( key_data || salt )
+	 *   == hash^(nrounds-1)( hash(key_data || salt) )
+	 */
+
+	uint8_t _hash0[64];
+	uint8_t _hash1[64];
+
+	{
+		SHA512_CTX ctx;
+		sha512_Init(&ctx);
+		sha512_Update(&ctx, key_data, key_data_len);
+		sha512_Update(&ctx, salt_8, 8);
+		sha512_Final(_hash0, &ctx);
+	}
+	--nrounds;
+
+	uint8_t *tmp;
+	uint8_t *hash0 = _hash0;
+	uint8_t *hash1 = _hash1;
+	while (0 < nrounds)
+	{
+		sha512_Raw(hash0, 64, hash1);
+		tmp = hash1;
+		hash1 = hash0;
+		hash0 = tmp;
+
+		--nrounds;
+	}
+
+	/*
+	 * hash0 contains the data.  First 32 bytes are key data, the
+	 * last are the IV.
+	 */
+
+	aes_encrypt_key256(hash0, e_ctx);
+	aes_decrypt_key256(hash0, d_ctx);
+	memcpy(iv_32, hash0+32, 32);
+
+	return true;
+}
+#endif
+
+static bool aes_init(const unsigned char *key_data, int key_data_len,
+		     const unsigned char *salt, EVP_CIPHER_CTX * e_ctx,
+		     EVP_CIPHER_CTX * d_ctx)
 {
 	int i, nrounds = 1721;
 	unsigned char key[32], iv[32];
@@ -90,18 +153,14 @@ static unsigned char *aes_decrypt(EVP_CIPHER_CTX * e, const unsigned char *ciphe
 	return plaintext;
 }
 
-cstring *read_aes_file(const char *filename, void *key, size_t key_len,
-		       size_t max_file_len)
+cstring *decrypt_aes_buffer(const void *ciphertext,
+			    size_t ct_len,
+			    const void *key,
+			    size_t key_len)
 {
 	EVP_CIPHER_CTX en, de;
 	unsigned int salt[] = { 4185398345U, 2729682459U };
-	void *ciphertext = NULL;
-	size_t ct_len = 0;
 	cstring *rs = NULL;
-
-	if (!bu_read_file(filename, &ciphertext, &ct_len, max_file_len))
-		goto out;
-
 	if (!aes_init(key, key_len, (unsigned char *) &salt, &en, &de))
 		goto out;
 
@@ -114,12 +173,30 @@ cstring *read_aes_file(const char *filename, void *key, size_t key_len,
 	EVP_CIPHER_CTX_cleanup(&de);
 
 out:
-	free(ciphertext);
 	return rs;
 }
 
-bool write_aes_file(const char *filename, void *key, size_t key_len,
-		    const void *plaintext, size_t pt_len)
+cstring *read_aes_file(const char *filename, void *key, size_t key_len,
+		       size_t max_file_len)
+{
+	void *ciphertext = NULL;
+	size_t ct_len = 0;
+
+	if (!bu_read_file(filename, &ciphertext, &ct_len, max_file_len)) {
+		return NULL;
+	}
+
+	cstring *rs = decrypt_aes_buffer(ciphertext, ct_len, key, key_len);
+	if (!rs) {
+		free(ciphertext);
+	}
+
+	return rs;
+}
+
+void *encrypt_aes_buffer(const void *plaintext, size_t pt_len,
+			 const void *key, size_t key_len,
+			 size_t *ct_len)
 {
 	EVP_CIPHER_CTX en, de;
 	unsigned int salt[] = { 4185398345U, 2729682459U };
@@ -127,11 +204,24 @@ bool write_aes_file(const char *filename, void *key, size_t key_len,
 	if (!aes_init(key, key_len, (unsigned char *) &salt, &en, &de))
 		return false;
 
-	size_t ct_len = pt_len;
-	void *ciphertext = aes_encrypt(&en, plaintext, &ct_len);
+	*ct_len = pt_len;
+	void *ciphertext = aes_encrypt(&en, plaintext, ct_len);
 
 	EVP_CIPHER_CTX_cleanup(&en);
 	EVP_CIPHER_CTX_cleanup(&de);
+
+	return ciphertext;
+}
+
+bool write_aes_file(const char *filename, void *key, size_t key_len,
+		    const void *plaintext, size_t pt_len)
+{
+	size_t ct_len;
+	void *ciphertext =
+		encrypt_aes_buffer(plaintext, pt_len, key, key_len, &ct_len);
+	if (!ciphertext) {
+		return false;
+	}
 
 	bool rc = bu_write_file(filename, ciphertext, ct_len);
 

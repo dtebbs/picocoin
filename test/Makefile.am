@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS=subdir-objects
+
 if ENABLE_VALGRIND
     TESTS_ENVIRONMENT=$(LIBTOOL) --mode=execute valgrind --leak-check=full \
                         --leak-resolution=high --num-callers=40 \
@@ -22,20 +24,21 @@ EXTRA_DIST	= \
 
 noinst_LIBRARIES= libtest.a
 
-libtest_a_SOURCES= libtest.h libtest.c
+libtest_a_SOURCES= libtest.h libtest.c $(top_builddir)/src/aes.c
 
 noinst_PROGRAMS	= clist cstr hex hdkeys hashtab base58 fileio util keyset bloom \
 		  message parr script-parse tx block blockfile blkdb script \
-		  tx-valid wallet wallet-basics chain-verf hash
+		  tx-valid wallet wallet-basics chain-verf hash aes
 
 TESTS		= clist cstr hex hdkeys hashtab base58 fileio util keyset bloom \
 		  message parr script-parse tx block blockfile blkdb script \
-		  tx-valid wallet wallet-basics chain-verf hash
+		  tx-valid wallet wallet-basics chain-verf hash aes
 
 COMMON_LDADD	= libtest.a $(top_builddir)/lib/libccoin.la \
 		  $(top_builddir)/external/secp256k1/libsecp256k1.la \
 		  @CRYPTO_LIBS@ @GMP_LIBS@ @JANSSON_LIBS@ @MATH_LIBS@
 
+aes_LDADD           = $(COMMON_LDADD) $(top_builddir)/src/aes.o
 base58_LDADD        = $(COMMON_LDADD)
 blkdb_LDADD         = $(COMMON_LDADD)
 block_LDADD         = $(COMMON_LDADD)

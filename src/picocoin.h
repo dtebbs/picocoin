@@ -31,8 +31,15 @@ extern bool debugging;
 extern void network_sync(void);
 
 /* aes.c */
+extern cstring *decrypt_aes_buffer(const void *ciphertext,
+				   size_t ct_len,
+				   const void *key,
+				   size_t key_len);
 extern cstring *read_aes_file(const char *filename, void *key, size_t key_len,
 			      size_t max_file_len);
+extern void *encrypt_aes_buffer(const void *plaintext, size_t pt_len,
+				const void *key, size_t key_len,
+				size_t *ct_len);
 extern bool write_aes_file(const char *filename, void *key, size_t key_len,
 		    const void *plaintext, size_t pt_len);
 
