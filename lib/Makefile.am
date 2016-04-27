@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = subdir-objects
+
 AM_CPPFLAGS	=   -I$(top_srcdir)/include \
                 -I$(top_srcdir)/external/secp256k1/include \
                 -I$(top_srcdir)/external/secp256k1/contrib
@@ -8,6 +10,12 @@ libccoin_la_LIBADD= -lm \
                     $(top_builddir)/external/secp256k1/libsecp256k1.la
 
 libccoin_la_SOURCES=	\
+	crypto/aes_modes.c	\
+	crypto/aescrypt.c	\
+	crypto/aeskey.c	\
+	crypto/aesopt.h	\
+	crypto/aestab.c	\
+	crypto/aestab.h	\
 	crypto/hmac.c	\
 	crypto/ripemd160.c	\
 	crypto/sha1.c	\
