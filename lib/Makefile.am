@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS = subdir-objects
+AUTOMAKE_OPTIONS=subdir-objects
 
 AM_CPPFLAGS	=   -I$(top_srcdir)/include \
                 -I$(top_srcdir)/external/secp256k1/include \
@@ -22,6 +22,7 @@ libccoin_la_SOURCES=	\
 	crypto/sha2.c	\
 	address.c	\
 	addr_match.c	\
+	aes.c		\
 	base58.c	\
 	bignum.c	\
 	blkdb.c		\

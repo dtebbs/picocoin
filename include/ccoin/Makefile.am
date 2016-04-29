@@ -9,6 +9,7 @@ ccoininclude_HEADERS =	\
 	crypto/sha2.h	\
 	address.h	\
 	addr_match.h	\
+	aes.h		\
 	base58.h	\
 	blkdb.h		\
 	bloom.h		\

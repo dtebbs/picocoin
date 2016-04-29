@@ -4,7 +4,7 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
 
-#include <../src/picocoin.h>
+#include <ccoin/aes.h>
 
 #include <stdio.h>
 #include <string.h>
