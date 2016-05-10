@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 #include <event2/event.h>
 #include <openssl/rand.h>
 #if defined(__APPLE__)
@@ -609,7 +610,8 @@ static void nc_conn_read_evt(int fd, short events, void *priv)
 	conn->expected -= rrc;
 
 	/* execute our state machine at most twice */
-	for (uint32_t i = 0; i < 2; i++) {
+	uint32_t i;
+	for (i = 0; i < 2; i++) {
 		if (conn->expected == 0) {
 			if (conn->reading_hdr) {
 				if (!nc_conn_got_header(conn)) {
@@ -1018,7 +1020,8 @@ static bool net_client_have_connection_to_peer(const net_client *client,
 	const size_t num_conns = client->connections.len;
 	/* LOG("net_client_have_connection_to_peer: %d connections", */
 	/*     (int )num_conns); */
-	for (size_t i = 0 ; i < num_conns ; ++i) {
+	size_t i;
+	for (i = 0 ; i < num_conns ; ++i) {
 		const nc_conn *c = parr_idx(&client->connections, i);
 		if (peer_compare_host(&c->peer, peer)) {
 			/* LOG("net_client_have_connection_to_peer: conn %d: match", */
@@ -1032,6 +1035,11 @@ static bool net_client_have_connection_to_peer(const net_client *client,
 
 	return false;
 }
+
+/* net_client *net_client_new() */
+/* { */
+/* 	return (net_client *)calloc(1, sizeof(net_client)); */
+/* } */
 
 bool net_client_init(net_client *client,
 		     enum chains chain_type,
@@ -1115,8 +1123,6 @@ void net_client_free(net_client *client)
 		free((char *)client->peers_file);
 		client->peers_file = NULL;
 	}
-
-	// TODO:
 }
 
 bool net_client_add_connection(net_client *client)
@@ -1167,7 +1173,8 @@ static void net_client_conns_gc(struct net_client *client)
 
 	/* build list of dead connections */
 	parr *connections = &client->connections;
-	for (uint32_t i = 0; i < connections->len; ++i) {
+	uint32_t i;
+	for (i = 0; i < connections->len; ++i) {
 		struct nc_conn *conn = parr_idx(connections, i);
 		if (conn->dead) {
 			dead = clist_prepend(dead, conn);
@@ -1224,4 +1231,9 @@ bool net_client_tick(net_client *client)
 	}
 
 	return true;
+}
+
+void net_client_break(net_client *client)
+{
+	event_base_loopbreak(client->eb);
 }

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <sched.h>
+#include <signal.h>
 
 # define LOG( _msg_, ... )						\
 	{								\
@@ -28,7 +29,17 @@
 		}							\
 	}
 
+static bool                s_running;
+static net_client          s_client;
 static struct blkdb        s_db;
+
+static void int_signal(int signo)
+{
+	if (s_running) {
+		s_running = false;
+		net_client_break(&s_client);
+	}
+}
 
 static bool getheaders(nc_conn *conn)
 {
@@ -40,6 +51,7 @@ static bool getheaders(nc_conn *conn)
 	cstring *s = ser_msg_getblocks(&gb);
 	bool rc = nc_conn_send(conn, "getheaders", s->str, s->len);
 
+	cstr_free(s, true);
 	msg_getblocks_free(&gb);
 	return rc;
 }
@@ -56,12 +68,11 @@ static void on_connected(net_client *client, nc_conn *conn)
 	}
 }
 
+
+
 int main(int argc, char **argv)
 {
-	// static const bool testnet = true;
-
-	struct net_client client;
-	assert(net_client_init(&client,
+	assert(net_client_init(&s_client,
 			       CHAIN_REGTEST,
 			       1, /* num_connections */
 			       "picotest-0.0.1",
@@ -69,16 +80,22 @@ int main(int argc, char **argv)
 			       false, /* relay */
 			       "picotest.peers",
 			       true /* debugging */
-			       ));
+	       ));
 
 	assert(blkdb_init_by_type(&s_db, CHAIN_REGTEST));
-	client.on_connected = on_connected;
+	s_client.on_connected = on_connected;
 
-	while (true) {
-		net_client_tick(&client);
+	s_running = true;
+	signal(SIGINT, int_signal);
+
+	while (s_running) {
+		net_client_tick(&s_client);
 		sched_yield();
 		//usleep(1);
 	}
+
+	net_client_free(&s_client);
+	blkdb_free(&s_db);
 
 	return 0;
 }

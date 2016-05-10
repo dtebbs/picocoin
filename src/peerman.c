@@ -373,8 +373,9 @@ void peerman_remove_host(struct peer_manager *peers, const struct peer *peer)
 	clist *tmp = peers->addrlist;
 	while (tmp) {
 		if (tmp->data == p) {
-			peer_free(p);
 			peers->addrlist = clist_delete(peers->addrlist, tmp);
+			peer_free(p);
+			free(p);
 			return;
 		}
 

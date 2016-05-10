@@ -109,6 +109,8 @@ typedef struct net_client {
 
 } net_client;
 
+// extern net_client *net_client_new();
+
 extern bool net_client_init(net_client *client,
 			    enum chains chain_type,
 			    uint32_t num_connections,
@@ -123,6 +125,8 @@ extern void net_client_free(net_client *client);
 extern bool net_client_add_connection(net_client *client);
 
 extern bool net_client_tick(net_client *client);
+
+extern void net_client_break(net_client *client);
 
 #ifdef __cplusplus
 }
