@@ -25,18 +25,24 @@ static bool parr_grow(parr *pa, size_t min_sz)
 	return true;
 }
 
-parr *parr_new(size_t res, void (*free_f)(void *))
+bool parr_init(parr *pa, size_t res, void (*free_f)(void *))
 {
-	parr *pa = calloc(1, sizeof(parr));
-	if (!pa)
-		return NULL;
-
+	memset(pa, 0, sizeof(parr));
 	pa->elem_free_f = free_f;
 	if (res == 0)
 		pa->data = NULL;
 	else if (!parr_grow(pa, res))
-		return NULL;
+		return false;
+	return true;
+}
 
+parr *parr_new(size_t res, void (*free_f)(void *))
+{
+	parr *pa = malloc(sizeof(parr));
+	if (!pa)
+		return NULL;
+	if (!parr_init(pa, res, free_f))
+		return NULL;
 	return pa;
 }
 

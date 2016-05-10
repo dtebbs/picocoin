@@ -979,14 +979,22 @@ static void network_child(int read_fd, int write_fd)
 	/*
 	 * read network peers
 	 */
-	struct peer_manager *peers;
+	struct peer_manager *peers = NULL;
 
-	peers = peerman_read();
+	char *peers_file = setting("peers");
+	if (peers_file) {
+		peers = peerman_read_from_file(peers_file,
+					       CHAIN_BITCOIN,
+					       debugging);
+	}
+
 	if (!peers) {
 		fprintf(stderr, "net: initializing empty peer list\n");
 
-		peers = peerman_seed(setting("no_dns") == NULL ? true : false);
-		if (!peerman_write(peers)) {
+		peers = peerman_seed(CHAIN_BITCOIN,
+				     setting("no_dns") == NULL ? true : false,
+				     debugging);
+		if (!peerman_write_to_file(peers, peers_file, CHAIN_BITCOIN)) {
 			fprintf(stderr, "net: failed to write peer list\n");
 			exit(1);
 		}
@@ -1056,7 +1064,9 @@ static void network_child(int read_fd, int write_fd)
 	} while (network_child_running);
 
 	/* cleanup: just the minimum for file I/O correctness */
-	peerman_write(peers);
+	if (peers_file) {
+		peerman_write_to_file(peers, peers_file, CHAIN_BITCOIN);
+	}
 	blkdb_free(&db);
 	exit(0);
 }
@@ -1226,4 +1236,3 @@ void network_sync(void)
 
 	neteng_free(neteng);
 }
-

@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
+#include <ccoin/coredefs.h>
 #include <ccoin/blkdb.h>
 #include <ccoin/message.h>
 #include <ccoin/serialize.h>
@@ -45,6 +46,21 @@ void bi_free(struct blkinfo *bi)
 
 	memset(bi, 0, sizeof(*bi));
 	free(bi);
+}
+
+bool blkdb_init_by_type(struct blkdb *db, enum chains chain_type)
+{
+	const struct chain_info *chain = chain_find_by_type(chain_type);
+	if (!chain) {
+		return false;
+	}
+
+	bu256_t genesis;
+	if (!hex_bu256(&genesis, chain->genesis_hash)) {
+		return false;
+	}
+
+	return blkdb_init(db, chain->netmagic, &genesis);
 }
 
 bool blkdb_init(struct blkdb *db, const unsigned char *netmagic,
@@ -292,4 +308,3 @@ void blkdb_locator(struct blkdb *db, struct blkinfo *bi,
 
 	bp_locator_push(locator, &db->block0);
 }
-

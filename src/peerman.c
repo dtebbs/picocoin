@@ -1,12 +1,11 @@
-/* Copyright 2012 exMULTI, Inc.
+	/* Copyright 2012 exMULTI, Inc.
  * Distributed under the MIT/X11 software license, see the accompanying
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
 #include "picocoin-config.h"
-
-#include <stdio.h>
-#include <string.h>
 #include "peerman.h"
+#include "picocoin.h"
+
 #include <ccoin/mbr.h>
 #include <ccoin/util.h>
 #include <ccoin/coredefs.h>
@@ -14,7 +13,11 @@
 #include <ccoin/net.h>
 #include <ccoin/clist.h>
 #include <ccoin/compat.h>
-#include "picocoin.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include <time.h>
 
 static unsigned long addr_hash(const void *key)
 {
@@ -64,7 +67,7 @@ int peer_cmp(const void *a_, const void *b_, void *user_priv)
 	return (int) (b_time - a_time);
 }
 
-static struct peer_manager *peerman_new(void)
+static struct peer_manager *peerman_new(bool debugging)
 {
 	struct peer_manager *peers;
 
@@ -72,6 +75,7 @@ static struct peer_manager *peerman_new(void)
 	if (!peers)
 		return NULL;
 
+	peers->debugging = debugging;
 	peers->map_addr = bp_hashtab_new(addr_hash, addr_equal);
 	if (!peers->map_addr) {
 		free(peers);
@@ -123,10 +127,14 @@ static bool peerman_has_addr(struct peer_manager *peers,const unsigned char *ip)
 }
 
 static bool peerman_read_rec(struct peer_manager *peers,
-			     const struct p2p_message *msg)
+			     const struct p2p_message *msg,
+			     const uint8_t netmagic[4])
 {
-	if (!strncmp(msg->hdr.command, "magic.peers",
-		     sizeof(msg->hdr.command)))
+	if (memcmp(msg->hdr.netmagic, netmagic, 4)) {
+		return false;
+	}
+
+	if (!strncmp(msg->hdr.command, "magic.peers", sizeof(msg->hdr.command)))
 		return true;
 
 	if (strncmp(msg->hdr.command, "peer", sizeof(msg->hdr.command)))
@@ -149,17 +157,19 @@ static bool peerman_read_rec(struct peer_manager *peers,
 	return true;
 }
 
-struct peer_manager *peerman_read(void)
+struct peer_manager *peerman_read_from_file(const char *filename,
+					    enum chains chain_type,
+					    bool debugging)
 {
-	char *filename = setting("peers");
-	if (!filename)
+	const struct chain_info *chain = chain_find_by_type(chain_type);
+	if (!chain) {
 		return NULL;
+	}
 
-	struct peer_manager *peers;
-
-	peers = peerman_new();
-	if (!peers)
+	struct peer_manager *peers = peerman_new(debugging);
+	if (!peers) {
 		return NULL;
+	}
 
 	int fd = file_seq_open(filename);
 	if (fd < 0) {
@@ -171,7 +181,7 @@ struct peer_manager *peerman_read(void)
 	bool read_ok = true;
 
 	while (fread_message(fd, &msg, &read_ok)) {
-		if (!peerman_read_rec(peers, &msg)) {
+		if (!peerman_read_rec(peers, &msg, chain->netmagic)) {
 			fprintf(stderr, "peerman: read record failed\n");
 			goto err_out;
 		}
@@ -192,22 +202,35 @@ err_out:
 	return NULL;
 }
 
-struct peer_manager *peerman_seed(bool use_dns)
+/* struct peer_manager *peerman_read(void) */
+/* { */
+/* 	char *filename = setting("peers"); */
+/* 	if (!filename) */
+/* 		return NULL; */
+/* 	return peerman_read_from_file(filename); */
+/* } */
+
+struct peer_manager *peerman_seed(enum chains chain_type,
+				  bool use_dns,
+				  bool debugging)
 {
 	struct peer_manager *peers;
 
-	peers = peerman_new();
-	if (!peers)
+	peers = peerman_new(debugging);
+	if (!peers) {
 		return NULL;
+	}
 
 	/* make DNS query for seed data */
 	clist *tmp, *seedlist = NULL;
-	if (use_dns)
-		seedlist = bu_dns_seed_addrs();
+	if (use_dns) {
+		seedlist = bu_dns_seed_addrs(chain_type);
+	}
 
-	if (debugging)
+	if (debugging) {
 		fprintf(stderr, "peerman: DNS returned %zu addresses\n",
 			clist_length(seedlist));
+	}
 
 	clist_shuffle(seedlist);
 
@@ -225,9 +248,15 @@ struct peer_manager *peerman_seed(bool use_dns)
 	return peers;
 }
 
-static bool ser_peerman(struct peer_manager *peers, int fd)
+static bool ser_peerman(struct peer_manager *peers, int fd, enum chains type)
 {
+	const struct chain_info *chain = chain_find_by_type(type);
+	if (!chain) {
+		return false;
+	}
+
 	/* write "magic number" (constant first file record) */
+
 	cstring *rec = message_str(chain->netmagic, "magic.peers", NULL, 0);
 	unsigned int rec_len = rec->len;
 	ssize_t wrc = write(fd, rec->str, rec_len);
@@ -237,9 +266,10 @@ static bool ser_peerman(struct peer_manager *peers, int fd)
 	if (wrc != rec_len)
 		return false;
 
-	if (debugging)
+	if (peers->debugging) {
 		fprintf(stderr, "peerman: %zu peers to write\n",
 			clist_length(peers->addrlist));
+	}
 
 	/* write peer list */
 	clist *tmp = peers->addrlist;
@@ -268,22 +298,22 @@ static bool ser_peerman(struct peer_manager *peers, int fd)
 	return true;
 }
 
-bool peerman_write(struct peer_manager *peers)
+bool peerman_write_to_file(struct peer_manager *peers,
+			   const char *filename,
+			   enum chains chain_type)
 {
-	char *filename = setting("peers");
-	if (!filename)
-		return false;
-
 	char tmpfn[strlen(filename) + 32];
 	strcpy(tmpfn, filename);
 	strcat(tmpfn, ".XXXXXX");
 
 	int fd = mkstemp(tmpfn);
-	if (fd < 0)
+	if (fd < 0) {
 		return false;
+	}
 
-	if (!ser_peerman(peers, fd))
+	if (!ser_peerman(peers, fd, chain_type)) {
 		goto err_out;
+	}
 
 	close(fd);
 	fd = -1;
@@ -301,6 +331,74 @@ err_out:
 		close(fd);
 	unlink(tmpfn);
 	return false;
+}
+
+bool peerman_get_next(struct peer_manager *peers, struct peer *out_p)
+{
+	clist *tmp = peers->addrlist;
+	if (tmp) {
+		clist *last = clist_last(tmp);
+		clist *next;
+
+		if (last != tmp)
+		{
+			next = tmp->next;
+			next->prev = NULL;
+
+			last->next = tmp;
+			tmp->prev = last;
+			tmp->next = NULL;
+
+		} else {
+			next = tmp;
+		}
+
+		peers->addrlist =  next;
+		assert(clist_last(peers->addrlist) == tmp);
+
+		peer_copy(out_p, tmp->data);
+		return true;
+	}
+
+	return false;
+}
+
+void peerman_remove_host(struct peer_manager *peers, const struct peer *peer)
+{
+	struct peer *p = bp_hashtab_get(peers->map_addr, peer->addr.ip);
+	if (!p) {
+		return;
+	}
+
+	clist *tmp = peers->addrlist;
+	while (tmp) {
+		if (tmp->data == p) {
+			peer_free(p);
+			peers->addrlist = clist_delete(peers->addrlist, tmp);
+			return;
+		}
+
+		tmp = tmp->next;
+	}
+}
+
+void peerman_mark_ok(struct peer_manager *peers, const struct peer *peer)
+{
+	// If the peer exists, update the OK flags, otherwise add it.
+
+	struct peer *p = bp_hashtab_get(peers->map_addr, peer->addr.ip);
+	if (p) {
+		p->last_ok = time(NULL);
+		p->n_ok++;
+		p->addr.nTime = (uint32_t )p->last_ok;
+		return;
+	}
+
+	p = malloc(sizeof(struct peer));
+	if (p) {
+		peer_copy(p, peer);
+		__peerman_add(peers, p, true);
+	}
 }
 
 void peerman_sort(struct peer_manager *peers)
@@ -334,8 +432,9 @@ void peerman_add(struct peer_manager *peers,
 
 	struct peer *peer;
 	peer = malloc(sizeof(*peer));
-	if (!peer)
+	if (!peer) {
 		return;
+	}
 
 	peer_copy(peer, peer_in);
 
@@ -387,9 +486,10 @@ void peerman_addstr(struct peer_manager *peers,
 
 	clist *tmp, *seedlist = bu_dns_lookup(NULL, hoststr, port);
 
-	if (debugging)
+	if (peers->debugging) {
 		fprintf(stderr, "peerman: DNS lookup '%s' returned %zu addresses\n",
 			addr_str, clist_length(seedlist));
+	}
 
 	/* import seed data into peerman */
 	tmp = seedlist;

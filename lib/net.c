@@ -3,17 +3,17 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.
  */
 #include "picocoin-config.h"
+#include <ccoin/net.h>
 
 #ifdef WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
+# include <winsock2.h>
+# include <ws2tcpip.h>
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <netdb.h>
 #endif
 #include <string.h>
-#include <ccoin/net.h>
 
 static const unsigned char pchOnionCat[] = {0xFD,0x87,0xD8,0x7E,0xEB,0x43};
 const char ipv4_mapped_pfx[12] = "\0\0\0\0\0\0\0\0\0\0\xff\xff";
@@ -233,4 +233,3 @@ void bn_group(unsigned char *group, unsigned int *group_len,
 	if (bits > 0)
 		PUSH_BACK(ipaddr[GB(15 - ofs)] | ((1 << bits) - 1));
 }
-

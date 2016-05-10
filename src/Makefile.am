@@ -7,7 +7,9 @@ noinst_LIBRARIES= libnode.a
 
 libnode_a_SOURCES=	\
 	peerman.c	\
-	peerman.h
+	peerman.h	\
+	net_client.c	\
+	net_client.h
 
 brd_SOURCES=		\
 	brd.c		\

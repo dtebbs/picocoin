@@ -14,6 +14,7 @@
 #include <gmp.h>
 #include <ccoin/cstr.h>
 #include <ccoin/clist.h>
+#include <ccoin/coredefs.h>
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
@@ -48,7 +49,7 @@ extern bool bu_write_file(const char *filename, const void *data, size_t data_le
 extern int file_seq_open(const char *filename);
 
 extern clist *bu_dns_lookup(clist *l, const char *seedname, unsigned int def_port);
-extern clist *bu_dns_seed_addrs(void);
+extern clist *bu_dns_seed_addrs(enum chains chain_type);
 
 extern unsigned long djb2_hash(unsigned long hash, const void *_buf, size_t buflen);
 

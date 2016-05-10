@@ -1547,7 +1547,7 @@ static bool add_orphan(const bu256_t *hash_in, struct const_buffer *buf_in)
 	}
 
 	bp_hashtab_put(orphans, hash, buf);
-	
+
 	return true;
 }
 
@@ -1556,14 +1556,22 @@ static void init_peers(struct net_child_info *nci)
 	/*
 	 * read network peers
 	 */
-	struct peer_manager *peers;
+	struct peer_manager *peers = NULL;
 
-	peers = peerman_read();
+	char *filename = setting("peers");
+	if (filename) {
+		peers = peerman_read_from_file(filename,
+					       CHAIN_BITCOIN,
+					       debugging);
+	}
+
 	if (!peers) {
 		fprintf(plog, "net: initializing empty peer list\n");
 
-		peers = peerman_seed(setting("no_dns") == NULL ? true : false);
-		if (!peerman_write(peers)) {
+		peers = peerman_seed(CHAIN_BITCOIN,
+				     setting("no_dns") == NULL ? true : false,
+				     debugging);
+		if (!peerman_write_to_file(peers, filename, CHAIN_BITCOIN)) {
 			fprintf(plog, "net: failed to write peer list\n");
 			exit(1);
 		}
@@ -1624,7 +1632,14 @@ static void shutdown_nci(struct net_child_info *nci)
 
 static void shutdown_daemon(struct net_child_info *nci)
 {
-	bool rc = peerman_write(nci->peers);
+	char *peers_file = setting("peers");
+	bool rc = true;
+	if (peers_file) {
+		rc = peerman_write_to_file(nci->peers,
+					   peers_file,
+					   CHAIN_BITCOIN);
+	}
+
 	fprintf(plog, "net: %s %u/%zu peers\n",
 		rc ? "wrote" : "failed to write",
 		bp_hashtab_size(nci->peers->map_addr),
@@ -1685,4 +1700,3 @@ int main (int argc, char *argv[])
 
 	return 0;
 }
-

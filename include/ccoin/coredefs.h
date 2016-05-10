@@ -36,13 +36,15 @@ enum bp_address_type {
 enum chains {
 	CHAIN_BITCOIN,
 	CHAIN_TESTNET3,
+	CHAIN_REGTEST,
 
-	CHAIN_LAST = CHAIN_TESTNET3
+	CHAIN_LAST = CHAIN_REGTEST
 };
 
 struct chain_info {
 	enum chains		chain_id;
 	const char		*name;		/* "bitcoin", "testnet3" */
+	short			port;
 
 	unsigned char		addr_pubkey;
 	unsigned char		addr_script;
@@ -53,6 +55,7 @@ struct chain_info {
 
 extern const struct chain_info chain_metadata[];
 extern const struct chain_info *chain_find(const char *name);
+extern const struct chain_info *chain_find_by_type(enum chains chain_type);
 extern const struct chain_info *chain_find_by_netmagic(unsigned char netmagic[4]);
 
 #ifdef __cplusplus

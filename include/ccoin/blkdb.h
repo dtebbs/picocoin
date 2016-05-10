@@ -51,6 +51,7 @@ struct blkdb {
 extern struct blkinfo *bi_new(void);
 extern void bi_free(struct blkinfo *bi);
 
+extern bool blkdb_init_by_type(struct blkdb *db, enum chains chain_type);
 extern bool blkdb_init(struct blkdb *db, const unsigned char *netmagic,
 		       const bu256_t *genesis_block);
 extern void blkdb_free(struct blkdb *db);
@@ -58,7 +59,7 @@ extern bool blkdb_read(struct blkdb *db, const char *idx_fn);
 extern bool blkdb_add(struct blkdb *db, struct blkinfo *bi,
 		      struct blkdb_reorg *reorg_info);
 extern void blkdb_locator(struct blkdb *db, struct blkinfo *bi,
-		   struct bp_locator *locator);
+			  struct bp_locator *locator);
 
 static inline struct blkinfo *blkdb_lookup(struct blkdb *db,const bu256_t *hash)
 {

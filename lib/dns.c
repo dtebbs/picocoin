@@ -81,13 +81,20 @@ clist *bu_dns_lookup(clist *l, const char *seedname, unsigned int def_port)
 	return l;
 }
 
-clist *bu_dns_seed_addrs(void)
+clist *bu_dns_seed_addrs(enum chains chain_type)
 {
+	const struct chain_info *chain = chain_find_by_type(chain_type);
+
 	unsigned int i;
 	clist *l = NULL;
 
-	for (i = 0; i < ARRAY_SIZE(dns_seeds); i++)
-		l = bu_dns_lookup(l, dns_seeds[i], 8333);
+	if (CHAIN_BITCOIN == chain_type) {
+		for (i = 0; i < ARRAY_SIZE(dns_seeds); i++) {
+			l = bu_dns_lookup(l, dns_seeds[i], 8333);
+		}
+	} else if (CHAIN_REGTEST == chain_type) {
+		l = bu_dns_lookup(l, "localhost", chain->port);
+	}
 
 	return l;
 }

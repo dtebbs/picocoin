@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,6 +21,7 @@ typedef struct parr {
 	void		(*elem_free_f)(void *);
 } parr;
 
+extern bool parr_init(parr *pa, size_t res, void (*free_f)(void *));
 extern parr *parr_new(size_t res, void (*free_f)(void *));
 extern void parr_free(parr *pa, bool free_array);
 

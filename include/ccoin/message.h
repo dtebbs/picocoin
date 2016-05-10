@@ -34,9 +34,10 @@ struct p2p_message {
 	void			*data;
 };
 
-enum {
+enum p2p_inv_type {
 	MSG_TX = 1,
 	MSG_BLOCK,
+	MSG_FILTERED_BLOCK,
 };
 
 extern void parse_message_hdr(struct p2p_message_hdr *hdr, const unsigned char *data);
@@ -81,6 +82,10 @@ static inline void msg_getblocks_free(struct msg_getblocks *gb)
 {
 	bp_locator_free(&gb->locator);
 }
+
+/**
+ * msg_headers used with "headers" messages
+ */
 
 struct msg_headers {
 	parr	*headers;

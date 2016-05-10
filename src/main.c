@@ -171,7 +171,7 @@ static void list_settings(void)
 
 static void list_dns_seeds(void)
 {
-	clist *tmp, *addrlist = bu_dns_seed_addrs();
+	clist *tmp, *addrlist = bu_dns_seed_addrs(CHAIN_BITCOIN);
 
 	size_t list_len = clist_length(addrlist);
 	unsigned int n_ent = 0;
@@ -336,4 +336,3 @@ int main (int argc, char *argv[])
 		do_command("help");
 	return 0;
 }
-
