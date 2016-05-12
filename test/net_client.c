@@ -72,6 +72,29 @@ static void on_connected(net_client *client, nc_conn *conn)
 
 int main(int argc, char **argv)
 {
+	bool run = false;
+	if (getenv("TEST_NET_CLIENT")) {
+		run = true;
+	}
+
+	int a;
+	for (a = 1 ; a < argc ; ++a) {
+		if (0 == strcmp("--run", argv[a])) {
+			run = true;
+		} else {
+			fprintf(stderr, "Unknown argument: %s", argv[a]);
+			exit(1);
+		}
+	}
+
+	if (!run) {
+		fprintf(stderr,
+	"net_client: skipping net_client test.  Use TEST_NET_CLIENT envvar or\n"
+	"net_client: --run arg.\n"
+		);
+		return 77;
+	}
+
 	assert(net_client_init(&s_client,
 			       CHAIN_REGTEST,
 			       1, /* num_connections */
