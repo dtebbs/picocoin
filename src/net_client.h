@@ -71,6 +71,10 @@ extern void nc_conn_kill(struct nc_conn *conn, bool forget_peer);
  * nc_client
  */
 
+enum {
+	NC_MAX_CONN		= 8,
+};
+
 typedef int (*get_block_height_t)(net_client *);
 typedef void (*on_connected_t)(net_client *, nc_conn *);
 typedef void (*on_msg_inv_t)(net_client *, nc_conn *, const struct msg_vinv *);
@@ -92,7 +96,7 @@ typedef struct net_client {
 	bool			debugging;
 
 	/* connections */
-	parr			connections;
+	parr			*connections;
 	bool                    dead_connections;
 	struct event_base	*eb;
 

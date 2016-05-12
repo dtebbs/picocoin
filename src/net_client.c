@@ -1017,12 +1017,12 @@ static bool nc_conn_start(nc_conn *conn, struct event_base *eb)
 static bool net_client_have_connection_to_peer(const net_client *client,
 					       const struct peer *peer)
 {
-	const size_t num_conns = client->connections.len;
+	const size_t num_conns = client->connections->len;
 	/* LOG("net_client_have_connection_to_peer: %d connections", */
 	/*     (int )num_conns); */
 	size_t i;
 	for (i = 0 ; i < num_conns ; ++i) {
-		const nc_conn *c = parr_idx(&client->connections, i);
+		const nc_conn *c = parr_idx(client->connections, i);
 		if (peer_compare_host(&c->peer, peer)) {
 			/* LOG("net_client_have_connection_to_peer: conn %d: match", */
 			/*     (int )i); */
@@ -1054,6 +1054,7 @@ bool net_client_init(net_client *client,
 
 	const struct chain_info *chain = chain_find_by_type(chain_type);
 	if (!chain) {
+		ERROR("invalid chain type");
 		return false;
 	}
 
@@ -1068,18 +1069,20 @@ bool net_client_init(net_client *client,
 	client->peers_file = copy_string(peer_file);
 	client->debugging = debugging;
 
-	if (!parr_init(&client->connections, 0, NULL)) {
+	/* connections */
+	client->connections = parr_new(NC_MAX_CONN, NULL);
+	if (!client->connections) {
+		ERROR("failed to create connections list");
 		goto err;
 	}
-	assert(0 == client->connections.len);
-	assert(0 == (&client->connections)->len);
-
 	client->dead_connections = false;
 	client->eb = event_base_new();
 	if (NULL == client->eb) {
+		ERROR("failed to create event base");
 		goto err_free_connections;
 	}
 
+	/* peer tracking */
 	if (client->peers_file) {
 		client->peers = peerman_read_from_file(peer_file,
 						       chain_type,
@@ -1090,13 +1093,13 @@ bool net_client_init(net_client *client,
 	}
 	if (!client->peers) {
 		ERROR("failed to create peer manager");
-		return false;
+		goto err_free_connections;
 	}
 
 	return true;
 
  err_free_connections:
-	parr_free(&client->connections, true);
+	parr_free(client->connections, true);
  err:
 	return false;
 
@@ -1104,6 +1107,17 @@ bool net_client_init(net_client *client,
 
 void net_client_free(net_client *client)
 {
+	if (client->connections) {
+		size_t c;
+		const size_t num_conns = client->connections->len;
+		for (c = 0 ; c < num_conns ; ++c) {
+			nc_conn *conn = parr_idx(client->connections, c);
+			nc_conn_free(conn);
+		}
+		parr_free(client->connections, true);
+		client->connections = NULL;
+	}
+
 	if (client->peers) {
 		peerman_free(client->peers);
 		client->peers = NULL;
@@ -1158,7 +1172,7 @@ bool net_client_add_connection(net_client *client)
 	}
 
 	LOG("new conn %p", conn);
-	parr_add(&client->connections, conn);
+	parr_add(client->connections, conn);
 	return true;
 }
 
@@ -1172,7 +1186,7 @@ static void net_client_conns_gc(struct net_client *client)
 	unsigned int n_gc = 0;
 
 	/* build list of dead connections */
-	parr *connections = &client->connections;
+	parr *connections = client->connections;
 	uint32_t i;
 	for (i = 0; i < connections->len; ++i) {
 		struct nc_conn *conn = parr_idx(connections, i);
@@ -1193,7 +1207,7 @@ static void net_client_conns_gc(struct net_client *client)
 		tmp = tmp->next;
 
 		parr_remove(connections, conn);
-        nc_conn_free(conn);
+		nc_conn_free(conn);
 		n_gc++;
 	}
 
@@ -1216,7 +1230,7 @@ bool net_client_tick(net_client *client)
 
 	// Add a connection if there aren't enough
 
-	parr *connections = &client->connections;
+	parr *connections = client->connections;
 
 	/* LOG("got %d/%d connections:", */
 	/*     (int )connections->len, */
